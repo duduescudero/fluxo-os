@@ -2,6 +2,8 @@
 
 Destino: Render Free para a aplicação Docker e Neon Free para PostgreSQL. O repositório não solicita banco pago, disco pago, domínio ou cartão.
 
+Demonstração publicada: **https://fluxo-os.onrender.com/**. A publicação inicial foi feita com as ferramentas oficiais de linha de comando e API; o Blueprint abaixo permite reproduzir a configuração em outra instalação.
+
 ## Neon
 
 1. Crie um projeto Free exclusivo para dados fictícios, por exemplo `fluxo-os-demo`.
@@ -18,7 +20,7 @@ O aplicativo aceita `DATABASE_URL` no formato PostgreSQL fornecido pelo Neon, co
 4. Inicie a publicação e acompanhe os logs. Migrações e carga fictícia são aplicadas na inicialização.
 5. Verifique HTTPS, entrada nos dois perfis, consultas e bloqueio de alterações.
 
-O endereço final depende da disponibilidade do nome no Render. Só será anunciado e colocado no README depois de validado.
+O endereço de uma nova instalação depende da disponibilidade do nome no Render. Valide-o antes de anunciar no README.
 
 ## Comportamento público
 

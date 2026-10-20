@@ -12,7 +12,7 @@ Gestão de ordens de serviço para assistências técnicas de computadores e not
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 
-[Executar](#execute-com-docker) · [Regras de negócio](#um-fluxo-com-regras) · [Arquitetura](docs/architecture.md) · [Testes](docs/testing.md)
+[**Abrir demonstração**](https://fluxo-os.onrender.com/) · [Executar localmente](#execute-com-docker) · [Regras de negócio](#um-fluxo-com-regras) · [Arquitetura](docs/architecture.md) · [Testes](docs/testing.md)
 
 </div>
 
@@ -56,7 +56,9 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/start.ps1 -ReadO
 
 Os dados continuam no PostgreSQL após reiniciar. Para parar, use `docker compose stop`. Os scripts não removem volumes nem apagam seus registros.
 
-> A demonstração está disponível para execução local. Não há uma hospedagem pública contratada ou anunciada neste momento.
+> **[Experimente online](https://fluxo-os.onrender.com/):** escolha administrador ou técnico, sem cadastro. A demonstração usa dados fictícios e permite explorar as telas em modo somente leitura. Para criar e alterar atendimentos, execute localmente. No plano gratuito, a primeira abertura após inatividade pode levar cerca de um minuto.
+
+A aplicação completa roda no Render Free e utiliza PostgreSQL no Neon Free. Veja a [configuração de publicação](docs/deployment.md).
 
 ## Um fluxo com regras
 
