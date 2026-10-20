@@ -2405,6 +2405,11 @@ td small {
 .table-scroll {
   position: relative;
 }
+@media print {
+  .detail-columns {
+    display: none;
+  }
+}
 @media (max-width: 600px) {
   .workflow-strip {
     display: grid;

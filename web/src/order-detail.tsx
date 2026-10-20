@@ -473,6 +473,42 @@ export function OrderDetail() {
         </aside>
       </div>
       <div className="print-only">
+        <h2>Resumo do atendimento</h2>
+        <p>
+          <strong>Cliente:</strong> {o.customerName} · {o.phone}
+        </p>
+        <p>
+          <strong>Equipamento:</strong> {o.equipmentName}
+        </p>
+        <p>
+          <strong>Problema:</strong> {o.problem}
+        </p>
+        <p>
+          <strong>Condição:</strong> {o.condition} · Acessórios: {o.accessories}
+        </p>
+        <p>
+          <strong>Diagnóstico:</strong> {o.diagnosis || "Ainda não registrado"}
+        </p>
+        <p>
+          <strong>Serviço realizado:</strong>{" "}
+          {o.workPerformed || "Não registrado"}
+        </p>
+        <p>
+          <strong>Retirada por:</strong> {o.receiver || "Ainda não registrada"}
+        </p>
+        {quote && (
+          <>
+            <h3>Orçamento versão {quote.revision}</h3>
+            {quote.items.map((item, i) => (
+              <p key={i}>
+                {item.quantity} × {item.description}: {money(item.total)}
+              </p>
+            ))}
+            <p>
+              <strong>Total: {money(quote.total)}</strong>
+            </p>
+          </>
+        )}
         <h2>Histórico completo</h2>
         {o.events.map((e) => (
           <p key={e.id}>

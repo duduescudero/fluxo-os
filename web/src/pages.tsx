@@ -162,10 +162,12 @@ export function DashboardPage() {
         title={`Bom trabalho, ${user.displayName.split(" ")[0]}.`}
         description="Aqui está o que acontece na sua assistência."
         action={
-          <Link className="button primary" to="/ordens?nova=1">
-            <Plus size={17} />
-            Nova ordem de serviço
-          </Link>
+          user.role === "Admin" && (
+            <Link className="button primary" to="/ordens?nova=1">
+              <Plus size={17} />
+              Nova ordem de serviço
+            </Link>
+          )
         }
       />
       <div className="dashboard-summary">
@@ -269,6 +271,7 @@ export function DashboardPage() {
   );
 }
 export function OrdersPage({ board = false }: { board?: boolean }) {
+  const { user } = useSession();
   const [params, setParams] = useSearchParams();
   const [search, setSearch] = useState(params.get("search") ?? "");
   const deferred = useDeferredValue(search);
@@ -305,10 +308,15 @@ export function OrdersPage({ board = false }: { board?: boolean }) {
             : "Do recebimento à entrega, tudo em um só lugar."
         }
         action={
-          <button className="button primary" onClick={() => setCreating(true)}>
-            <Plus size={17} />
-            Nova ordem
-          </button>
+          user.role === "Admin" && (
+            <button
+              className="button primary"
+              onClick={() => setCreating(true)}
+            >
+              <Plus size={17} />
+              Nova ordem
+            </button>
+          )
         }
       />
       <section className="panel">

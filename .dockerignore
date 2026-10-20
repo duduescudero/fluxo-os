@@ -1,0 +1,12 @@
+.git
+.local
+**/node_modules
+**/bin
+**/obj
+**/dist
+**/TestResults
+**/test-results
+**/playwright-report
+.env
+.env.*
+docs/images
