@@ -1,0 +1,14 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/TestResults/
+**/playwright-report/
+**/test-results/
+.env
+.env.*
+!.env.example
+**/appsettings.Local.json
+.local/
+*.log
+.DS_Store
