@@ -12,6 +12,16 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+var onRender = builder.Configuration["RENDER"] == "true";
+if (onRender)
+    builder.Services.Configure<ForwardedHeadersOptions>(o =>
+    {
+        // Render terminates HTTPS at its ingress before forwarding to the container.
+        o.ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor;
+        o.KnownIPNetworks.Clear();
+        o.KnownProxies.Clear();
+        o.ForwardLimit = 1;
+    });
 builder.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = 65_536);
 builder.Services.ConfigureHttpJsonOptions(o =>
 {
@@ -21,10 +31,10 @@ builder.Services.ConfigureHttpJsonOptions(o =>
 });
 builder.Services.AddDbContext<FlowDb>(o =>
     o.UseNpgsql(
-        builder.Configuration.GetConnectionString("Database")
-            ?? throw new InvalidOperationException(
-                "Configure ConnectionStrings__Database antes de iniciar."
-            )
+        DatabaseConnection.Resolve(
+            builder.Configuration.GetConnectionString("Database"),
+            builder.Configuration["DATABASE_URL"]
+        )
     )
 );
 builder.Services.AddScoped<IFlowDb>(sp => sp.GetRequiredService<FlowDb>());
@@ -64,13 +74,27 @@ builder.Services.ConfigureApplicationCookie(o =>
     };
 });
 builder.Services.Configure<SecurityStampValidatorOptions>(o =>
-    o.ValidationInterval = TimeSpan.Zero
-);
+{
+    o.ValidationInterval = TimeSpan.Zero;
+    o.OnRefreshingPrincipal = c =>
+    {
+        if (
+            c.CurrentPrincipal?.HasClaim("demo_access", "true") == true
+            && c.NewPrincipal?.Identity is ClaimsIdentity identity
+        )
+            identity.AddClaim(new Claim("demo_access", "true"));
+        return Task.CompletedTask;
+    };
+});
 builder.Services.AddAntiforgery(o =>
 {
     o.HeaderName = "X-CSRF-TOKEN";
     o.Cookie.Name = "fluxo.csrf";
     o.Cookie.SameSite = SameSiteMode.Strict;
+    o.Cookie.SecurePolicy =
+        builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing")
+            ? CookieSecurePolicy.SameAsRequest
+            : CookieSecurePolicy.Always;
 });
 builder.Services.AddAuthorization();
 builder.Services.AddOpenApi();
@@ -94,13 +118,17 @@ builder.Services.AddRateLimiter(o =>
 });
 builder.Services.AddHealthChecks().AddDbContextCheck<FlowDb>();
 var keys = builder.Configuration["DataProtection:Path"];
+var protection = builder.Services.AddDataProtection().SetApplicationName("FluxoOS");
 if (!string.IsNullOrWhiteSpace(keys))
-    builder
-        .Services.AddDataProtection()
-        .PersistKeysToFileSystem(new DirectoryInfo(keys))
-        .SetApplicationName("FluxoOS");
+    protection.PersistKeysToFileSystem(new DirectoryInfo(keys));
+else
+    protection.PersistKeysToDbContext<FlowDb>();
 var app = builder.Build();
 var demo = app.Configuration.GetValue<bool>("Demo:Enabled");
+if (onRender)
+    app.UseForwardedHeaders();
+if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
+    app.UseHsts();
 
 app.Use(
     async (c, next) =>
@@ -164,6 +192,18 @@ app.Use(
     }
 );
 app.UseAuthentication();
+app.Use(
+    async (c, next) =>
+    {
+        // A password-free demo session must never become a writable session after a config change.
+        if (!demo && c.User.HasClaim("demo_access", "true"))
+        {
+            await c.SignOutAsync(IdentityConstants.ApplicationScheme);
+            c.User = new ClaimsPrincipal(new ClaimsIdentity());
+        }
+        await next();
+    }
+);
 app.UseAuthorization();
 app.UseRateLimiter();
 app.Use(
@@ -218,12 +258,14 @@ app.MapPost(
         {
             if (!demo)
                 return Results.NotFound();
+            if (input.Role is not ("Admin" or "Technician"))
+                return Results.Problem(statusCode: 400, title: "Perfil de demonstração inválido.");
             var email =
                 input.Role == "Technician" ? "tecnico@fluxo.example" : "admin@fluxo.example";
             var user = await users.FindByEmailAsync(email);
             if (user is null || user.Disabled)
                 return Results.Problem(statusCode: 503, title: "Demonstração indisponível.");
-            await signIn.SignInAsync(user, false);
+            await signIn.SignInWithClaimsAsync(user, false, [new Claim("demo_access", "true")]);
             return Results.Ok(new { ok = true });
         }
     )

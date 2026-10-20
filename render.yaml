@@ -1,0 +1,27 @@
+# The only Render resource is a Free web service. PostgreSQL lives on Neon Free.
+services:
+  - type: web
+    name: fluxo-os
+    runtime: docker
+    plan: free
+    region: virginia
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/live
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_HTTP_PORTS
+        value: '10000'
+      - key: Demo__Enabled
+        value: 'true'
+      - key: Database__Migrate
+        value: 'true'
+      - key: Database__Seed
+        value: 'true'
+      - key: DataProtection__Path
+        value: ''
+      - key: DATABASE_URL
+        sync: false

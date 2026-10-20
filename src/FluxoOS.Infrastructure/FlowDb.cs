@@ -1,5 +1,6 @@
 using FluxoOS.Application;
 using FluxoOS.Domain;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -12,8 +13,12 @@ public class AppUser : IdentityUser
     public bool Disabled { get; set; }
 }
 
-public class FlowDb(DbContextOptions<FlowDb> options) : IdentityDbContext<AppUser>(options), IFlowDb
+public class FlowDb(DbContextOptions<FlowDb> options)
+    : IdentityDbContext<AppUser>(options),
+        IFlowDb,
+        IDataProtectionKeyContext
 {
+    public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Equipment> Equipment => Set<Equipment>();
     public DbSet<ServiceOrder> Orders => Set<ServiceOrder>();

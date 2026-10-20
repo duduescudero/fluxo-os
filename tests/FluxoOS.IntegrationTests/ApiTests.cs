@@ -482,10 +482,8 @@ public class ApiTests(ApiFixture f) : IClassFixture<ApiFixture>
         using var c = demo.CreateClient(
             new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") }
         );
-        Assert.Equal(
-            HttpStatusCode.OK,
-            (await ApiFixture.Send(c, "/api/auth/demo", new { role = "Admin" })).StatusCode
-        );
+        var login = await ApiFixture.Send(c, "/api/auth/demo", new { role = "Admin" });
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await c.GetAsync("/api/orders")).StatusCode);
         Assert.Equal(
             HttpStatusCode.Forbidden,
@@ -496,6 +494,32 @@ public class ApiTests(ApiFixture f) : IClassFixture<ApiFixture>
                     new { name = "Bloqueado", phone = "11999990000" }
                 )
             ).StatusCode
+        );
+        // Both hosts share persistent keys: a normal password session must decrypt,
+        // while the password-free demo session must be rejected in writable mode.
+        using var normal = f.Client();
+        var passwordLogin = await ApiFixture.Send(
+            c,
+            "/api/auth/login",
+            new { email = "admin@fluxo.example", password = ApiFixture.Password }
+        );
+        var regularCookie = passwordLogin
+            .Headers.GetValues("Set-Cookie")
+            .Single(x => x.StartsWith("fluxo.session="))
+            .Split(';')[0];
+        using var accepted = new HttpRequestMessage(HttpMethod.Get, "/api/orders");
+        accepted.Headers.Add("Cookie", regularCookie);
+        Assert.Equal(HttpStatusCode.OK, (await normal.SendAsync(accepted)).StatusCode);
+        using var normalAnonymous = f.Client();
+        var demoCookie = login
+            .Headers.GetValues("Set-Cookie")
+            .Single(x => x.StartsWith("fluxo.session="))
+            .Split(';')[0];
+        using var rejected = new HttpRequestMessage(HttpMethod.Get, "/api/orders");
+        rejected.Headers.Add("Cookie", demoCookie);
+        Assert.Equal(
+            HttpStatusCode.Unauthorized,
+            (await normalAnonymous.SendAsync(rejected)).StatusCode
         );
     }
 

@@ -13,14 +13,17 @@ Para parar: `docker compose stop`. Para retomar: execute o script novamente. Nã
 | Nome | Uso |
 | --- | --- |
 | ConnectionStrings__Database | Conexão PostgreSQL da API. |
+| DATABASE_URL | Alternativa em URL PostgreSQL, com verificação TLS obrigatória. ConnectionStrings__Database tem prioridade. |
 | Database__Migrate | Aplica migrações na inicialização quando explicitamente true. |
 | Database__Seed | Cria acessos e dados fictícios opcionais; não habilitar para uma base real. |
 | Bootstrap__Password | Senha inicial dos usuários locais, somente na criação/configuração inicial. |
 | Demo__Enabled | Login de demonstração e bloqueio das alterações de negócio. Apenas com base fictícia. |
-| DataProtection__Path | Diretório persistente das chaves usadas na autenticação. |
+| DataProtection__Path | Diretório persistente das chaves usadas na autenticação. Se vazio, usa a tabela DataProtectionKeys no PostgreSQL. |
 | ASPNETCORE_ENVIRONMENT | Development no Compose local; Production em uma implantação pública. |
 
 Em produção, mantenha segredos fora da imagem, habilite HTTPS no proxy, restrinja acesso ao banco e aos volumes e desligue seed e demonstração para dados reais. Os cookies são Secure no ambiente Production. Não configure uma hospedagem pública apenas expondo a porta do Compose de desenvolvimento.
+
+Para a demonstração com dados fictícios no Render e Neon, veja [publicação](deployment.md). A conexão direta escolhida permite executar as migrações no startup; o pool Npgsql desta única instância é limitado a dez conexões. Em uma implantação maior, separe as migrações em conexão direta do tráfego comum em conexão pooled.
 
 ## Segurança e limites
 

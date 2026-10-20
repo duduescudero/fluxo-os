@@ -1,5 +1,9 @@
 .git
 .local
+.agents
+.codex
+.neon
+skills-lock.json
 **/node_modules
 **/bin
 **/obj
